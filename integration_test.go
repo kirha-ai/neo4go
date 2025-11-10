@@ -53,6 +53,70 @@ func cleanupDatabase(t *testing.T, cfg Config) {
 	_, _ = session.Run(ctx, "MATCH (n) DETACH DELETE n", nil)
 }
 
+func verifyVersion(t *testing.T, ctx context.Context, migrator Migrator, expected int) {
+	t.Helper()
+	version, err := migrator.Version(ctx)
+	if err != nil {
+		t.Fatalf("failed to get version: %v", err)
+	}
+	if version != expected {
+		t.Errorf("expected version %d, got %d", expected, version)
+	}
+}
+
+func verifyMigrationStatuses(t *testing.T, ctx context.Context, migrator Migrator, expectedCount int) {
+	t.Helper()
+	statuses, err := migrator.Status(ctx)
+	if err != nil {
+		t.Fatalf("failed to get status: %v", err)
+	}
+
+	if len(statuses) != expectedCount {
+		t.Fatalf("expected %d migrations, got %d", expectedCount, len(statuses))
+	}
+
+	for _, status := range statuses {
+		if !status.Applied {
+			t.Errorf("migration %d should be applied", status.Version)
+		}
+		if status.AppliedAt == nil {
+			t.Errorf("migration %d should have applied_at timestamp", status.Version)
+		}
+	}
+}
+
+func verifyNeo4jConstraints(t *testing.T, ctx context.Context, cfg Config, minConstraints int) {
+	t.Helper()
+	driver, err := neo4j.NewDriverWithContext(
+		cfg.URI,
+		neo4j.BasicAuth(cfg.Username, cfg.Password, ""),
+	)
+	if err != nil {
+		t.Fatalf("failed to create driver: %v", err)
+	}
+	defer driver.Close(ctx)
+
+	session := driver.NewSession(ctx, neo4j.SessionConfig{
+		AccessMode:   neo4j.AccessModeRead,
+		DatabaseName: cfg.Database,
+	})
+	defer session.Close(ctx)
+
+	result, err := session.Run(ctx, "SHOW CONSTRAINTS", nil)
+	if err != nil {
+		t.Fatalf("failed to query constraints: %v", err)
+	}
+
+	constraintCount := 0
+	for result.Next(ctx) {
+		constraintCount++
+	}
+
+	if constraintCount < minConstraints {
+		t.Errorf("expected at least %d constraints, got %d", minConstraints, constraintCount)
+	}
+}
+
 func TestIntegrationFullMigrationCycle(t *testing.T) {
 	cfg := getTestConfig()
 	cfg.MigrationsFS = fstest.MapFS{
@@ -89,106 +153,36 @@ DROP CONSTRAINT post_id_unique IF EXISTS;`),
 	ctx := context.Background()
 
 	t.Run("initial version should be 0", func(t *testing.T) {
-		version, err := migrator.Version(ctx)
-		if err != nil {
-			t.Fatalf("failed to get version: %v", err)
-		}
-		if version != 0 {
-			t.Errorf("expected version 0, got %d", version)
-		}
+		verifyVersion(t, ctx, migrator, 0)
 	})
 
 	t.Run("apply all migrations", func(t *testing.T) {
 		if err := migrator.Up(ctx); err != nil {
 			t.Fatalf("failed to run migrations: %v", err)
 		}
-
-		version, err := migrator.Version(ctx)
-		if err != nil {
-			t.Fatalf("failed to get version: %v", err)
-		}
-		if version != 2 {
-			t.Errorf("expected version 2, got %d", version)
-		}
+		verifyVersion(t, ctx, migrator, 2)
 	})
 
 	t.Run("verify migrations are recorded", func(t *testing.T) {
-		statuses, err := migrator.Status(ctx)
-		if err != nil {
-			t.Fatalf("failed to get status: %v", err)
-		}
-
-		if len(statuses) != 2 {
-			t.Fatalf("expected 2 migrations, got %d", len(statuses))
-		}
-
-		for _, status := range statuses {
-			if !status.Applied {
-				t.Errorf("migration %d should be applied", status.Version)
-			}
-			if status.AppliedAt == nil {
-				t.Errorf("migration %d should have applied_at timestamp", status.Version)
-			}
-		}
+		verifyMigrationStatuses(t, ctx, migrator, 2)
 	})
 
 	t.Run("verify constraints exist in Neo4j", func(t *testing.T) {
-		driver, err := neo4j.NewDriverWithContext(
-			cfg.URI,
-			neo4j.BasicAuth(cfg.Username, cfg.Password, ""),
-		)
-		if err != nil {
-			t.Fatalf("failed to create driver: %v", err)
-		}
-		defer driver.Close(ctx)
-
-		session := driver.NewSession(ctx, neo4j.SessionConfig{
-			AccessMode:   neo4j.AccessModeRead,
-			DatabaseName: cfg.Database,
-		})
-		defer session.Close(ctx)
-
-		result, err := session.Run(ctx, "SHOW CONSTRAINTS", nil)
-		if err != nil {
-			t.Fatalf("failed to query constraints: %v", err)
-		}
-
-		constraintCount := 0
-		for result.Next(ctx) {
-			constraintCount++
-		}
-
-		if constraintCount < 2 {
-			t.Errorf("expected at least 2 constraints, got %d", constraintCount)
-		}
+		verifyNeo4jConstraints(t, ctx, cfg, 2)
 	})
 
 	t.Run("rollback last migration", func(t *testing.T) {
 		if err := migrator.Down(ctx); err != nil {
 			t.Fatalf("failed to rollback: %v", err)
 		}
-
-		version, err := migrator.Version(ctx)
-		if err != nil {
-			t.Fatalf("failed to get version: %v", err)
-		}
-		if version != 1 {
-			t.Errorf("expected version 1 after rollback, got %d", version)
-		}
+		verifyVersion(t, ctx, migrator, 1)
 	})
 
 	t.Run("re-apply rolled back migration", func(t *testing.T) {
 		if err := migrator.Up(ctx); err != nil {
 			t.Fatalf("failed to re-apply migration: %v", err)
 		}
-
-		version, err := migrator.Version(ctx)
-		if err != nil {
-			t.Fatalf("failed to get version: %v", err)
-		}
-		if version != 2 {
-			t.Errorf("expected version 2, got %d", version)
-		}
+		verifyVersion(t, ctx, migrator, 2)
 	})
 }
 

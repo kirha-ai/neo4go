@@ -11,12 +11,12 @@ import (
 
 func TestMigratorUp(t *testing.T) {
 	tests := []struct {
-		name              string
-		migrations        []Migration
-		appliedVersions   []int
-		expectError       bool
-		storageInitError  error
-		storageRecordErr  error
+		name             string
+		migrations       []Migration
+		appliedVersions  []int
+		expectError      bool
+		storageInitError error
+		storageRecordErr error
 	}{
 		{
 			name: "all migrations already applied",
@@ -483,10 +483,10 @@ func TestMigratorStatus(t *testing.T) {
 
 func TestMigratorVersion(t *testing.T) {
 	tests := []struct {
-		name            string
-		currentVersion  int
-		expectError     bool
-		storageInitErr  error
+		name              string
+		currentVersion    int
+		expectError       bool
+		storageInitErr    error
 		storageVersionErr error
 	}{
 		{
