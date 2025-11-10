@@ -28,11 +28,23 @@ go get go.kirha.ai/neo4go
 
 ### CLI Tool
 
+**Option 1: Install from source (recommended for development)**
+
 ```bash
-go install go.kirha.ai/neo4go/cmd/neo4go@latest
+git clone https://github.com/kirha-ai/neo4go.git
+cd neo4go
+make install
 ```
 
-Or download pre-built binaries from the [releases page](https://github.com/kirha-ai/neo4go/releases).
+**Option 2: Install specific version**
+
+```bash
+go install go.kirha.ai/neo4go/cmd/neo4go@v0.0.1
+```
+
+**Option 3: Download pre-built binaries**
+
+Download from the [releases page](https://github.com/kirha-ai/neo4go/releases).
 
 ## Quick Start
 
