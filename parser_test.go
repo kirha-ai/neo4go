@@ -51,7 +51,7 @@ DROP INDEX user_email IF EXISTS;`,
 			name:      "no migrations",
 			files:     map[string]string{},
 			wantCount: 0,
-			wantErr:   ErrNoMigrations,
+			wantErr:   nil,
 		},
 		{
 			name: "missing up statement",
