@@ -55,14 +55,14 @@ Create a migrations directory and add your first migration:
 **`migrations/001_initial.cypher`**
 
 ```cypher
--- +neo4go Up
+// +neo4go Up
 CREATE CONSTRAINT user_id_unique IF NOT EXISTS
 FOR (u:User) REQUIRE u.id IS UNIQUE;
 
 CREATE INDEX user_email_idx IF NOT EXISTS
 FOR (u:User) ON (u.email);
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT user_id_unique IF EXISTS;
 DROP INDEX user_email_idx IF EXISTS;
 ```
@@ -156,13 +156,13 @@ Migration files must follow the naming convention: `{version}_{name}.cypher`
 Each migration file contains two sections:
 
 ```cypher
--- +neo4go Up
--- Your "up" migration statements here
+// +neo4go Up
+// Your "up" migration statements here
 CREATE CONSTRAINT ...;
 CREATE INDEX ...;
 
--- +neo4go Down
--- Your "down" migration statements here
+// +neo4go Down
+// Your "down" migration statements here
 DROP CONSTRAINT ...;
 DROP INDEX ...;
 ```

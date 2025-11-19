@@ -121,20 +121,20 @@ func TestIntegrationFullMigrationCycle(t *testing.T) {
 	cfg := getTestConfig()
 	cfg.MigrationsFS = fstest.MapFS{
 		"001_create_users.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT user_id_unique IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE;
 CREATE INDEX user_email_idx IF NOT EXISTS FOR (u:User) ON (u.email);
 
--- +neo4go Down
+// +neo4go Down
 DROP INDEX user_email_idx IF EXISTS;
 DROP CONSTRAINT user_id_unique IF EXISTS;`),
 		},
 		"002_create_posts.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT post_id_unique IF NOT EXISTS FOR (p:Post) REQUIRE p.id IS UNIQUE;
 CREATE INDEX post_created_at_idx IF NOT EXISTS FOR (p:Post) ON (p.created_at);
 
--- +neo4go Down
+// +neo4go Down
 DROP INDEX post_created_at_idx IF EXISTS;
 DROP CONSTRAINT post_id_unique IF EXISTS;`),
 		},
@@ -190,24 +190,24 @@ func TestIntegrationUpTo(t *testing.T) {
 	cfg := getTestConfig()
 	cfg.MigrationsFS = fstest.MapFS{
 		"001_first.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT c1 IF NOT EXISTS FOR (n:TestNode1) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT c1 IF EXISTS;`),
 		},
 		"002_second.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT c2 IF NOT EXISTS FOR (n:TestNode2) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT c2 IF EXISTS;`),
 		},
 		"003_third.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT c3 IF NOT EXISTS FOR (n:TestNode3) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT c3 IF EXISTS;`),
 		},
 	}
@@ -252,24 +252,24 @@ func TestIntegrationDownTo(t *testing.T) {
 	cfg := getTestConfig()
 	cfg.MigrationsFS = fstest.MapFS{
 		"001_first.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT c1 IF NOT EXISTS FOR (n:TestNode1) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT c1 IF EXISTS;`),
 		},
 		"002_second.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT c2 IF NOT EXISTS FOR (n:TestNode2) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT c2 IF EXISTS;`),
 		},
 		"003_third.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT c3 IF NOT EXISTS FOR (n:TestNode3) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT c3 IF EXISTS;`),
 		},
 	}
@@ -318,10 +318,10 @@ func TestIntegrationChecksumVerification(t *testing.T) {
 	cfg := getTestConfig()
 	cfg.MigrationsFS = fstest.MapFS{
 		"001_test.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT test_c IF NOT EXISTS FOR (n:Test) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT test_c IF EXISTS;`),
 		},
 	}
@@ -351,10 +351,10 @@ DROP CONSTRAINT test_c IF EXISTS;`),
 
 	cfg.MigrationsFS = fstest.MapFS{
 		"001_test.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT test_c_modified IF NOT EXISTS FOR (n:Test) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT test_c_modified IF EXISTS;`),
 		},
 	}
@@ -381,10 +381,10 @@ func TestIntegrationIdempotency(t *testing.T) {
 	cfg := getTestConfig()
 	cfg.MigrationsFS = fstest.MapFS{
 		"001_test.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT idem_c IF NOT EXISTS FOR (n:Idem) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT idem_c IF EXISTS;`),
 		},
 	}
@@ -423,18 +423,18 @@ func TestIntegrationTransactionRollback(t *testing.T) {
 	cfg := getTestConfig()
 	cfg.MigrationsFS = fstest.MapFS{
 		"001_valid.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT valid_c IF NOT EXISTS FOR (n:Valid) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT valid_c IF EXISTS;`),
 		},
 		"002_invalid.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT invalid_c IF NOT EXISTS FOR (n:Invalid) REQUIRE n.id IS UNIQUE;
 THIS IS INVALID CYPHER THAT WILL FAIL;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT invalid_c IF EXISTS;`),
 		},
 	}
@@ -470,10 +470,10 @@ func TestIntegrationConcurrentMigrations(t *testing.T) {
 	cfg := getTestConfig()
 	cfg.MigrationsFS = fstest.MapFS{
 		"001_test.cypher": &fstest.MapFile{
-			Data: []byte(`-- +neo4go Up
+			Data: []byte(`// +neo4go Up
 CREATE CONSTRAINT conc_c IF NOT EXISTS FOR (n:Conc) REQUIRE n.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT conc_c IF EXISTS;`),
 		},
 	}

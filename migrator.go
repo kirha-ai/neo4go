@@ -366,12 +366,12 @@ func (m *migrator) getFilePath(filename string) string {
 }
 
 func (m *migrator) getMigrationTemplate() string {
-	return `-- +neo4go Up
--- Add your up migration statements here
+	return `// +neo4go Up
+// Add your up migration statements here
 
 
--- +neo4go Down
--- Add your down migration statements here
+// +neo4go Down
+// Add your down migration statements here
 
 `
 }

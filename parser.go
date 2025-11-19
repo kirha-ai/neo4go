@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	upMarker   = "-- +neo4go Up"
-	downMarker = "-- +neo4go Down"
+	upMarker   = "// +neo4go Up"
+	downMarker = "// +neo4go Down"
 )
 
 var migrationFilePattern = regexp.MustCompile(`^(\d+)_(.+)\.cypher$`)

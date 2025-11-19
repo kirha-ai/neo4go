@@ -19,10 +19,10 @@ func TestParserParseMigrations(t *testing.T) {
 		{
 			name: "valid single migration",
 			files: map[string]string{
-				"001_initial.cypher": `-- +neo4go Up
+				"001_initial.cypher": `// +neo4go Up
 CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT user_id IF EXISTS;`,
 			},
 			wantCount:   1,
@@ -33,15 +33,15 @@ DROP CONSTRAINT user_id IF EXISTS;`,
 		{
 			name: "multiple migrations ordered correctly",
 			files: map[string]string{
-				"001_initial.cypher": `-- +neo4go Up
+				"001_initial.cypher": `// +neo4go Up
 CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT user_id IF EXISTS;`,
-				"002_add_index.cypher": `-- +neo4go Up
+				"002_add_index.cypher": `// +neo4go Up
 CREATE INDEX user_email IF NOT EXISTS FOR (u:User) ON (u.email);
 
--- +neo4go Down
+// +neo4go Down
 DROP INDEX user_email IF EXISTS;`,
 			},
 			wantCount: 2,
@@ -56,7 +56,7 @@ DROP INDEX user_email IF EXISTS;`,
 		{
 			name: "missing up statement",
 			files: map[string]string{
-				"001_initial.cypher": `-- +neo4go Down
+				"001_initial.cypher": `// +neo4go Down
 DROP CONSTRAINT user_id IF EXISTS;`,
 			},
 			wantCount: 0,
@@ -65,7 +65,7 @@ DROP CONSTRAINT user_id IF EXISTS;`,
 		{
 			name: "missing down statement",
 			files: map[string]string{
-				"001_initial.cypher": `-- +neo4go Up
+				"001_initial.cypher": `// +neo4go Up
 CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE;`,
 			},
 			wantCount: 0,
@@ -127,10 +127,10 @@ func TestParserSplitUpDown(t *testing.T) {
 	}{
 		{
 			name: "valid migration",
-			content: `-- +neo4go Up
+			content: `// +neo4go Up
 CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT user_id IF EXISTS;`,
 			wantUpSQL:   "CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE;",
 			wantDownSQL: "DROP CONSTRAINT user_id IF EXISTS;",
@@ -138,11 +138,11 @@ DROP CONSTRAINT user_id IF EXISTS;`,
 		},
 		{
 			name: "multiple statements",
-			content: `-- +neo4go Up
+			content: `// +neo4go Up
 CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE;
 CREATE INDEX user_email IF NOT EXISTS FOR (u:User) ON (u.email);
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT user_id IF EXISTS;
 DROP INDEX user_email IF EXISTS;`,
 			wantUpSQL:   "CREATE CONSTRAINT user_id IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE;\nCREATE INDEX user_email IF NOT EXISTS FOR (u:User) ON (u.email);",
@@ -181,15 +181,15 @@ DROP INDEX user_email IF EXISTS;`,
 func TestParserMigrationOrdering(t *testing.T) {
 	filesystem := fstest.MapFS{
 		"003_third.cypher": &fstest.MapFile{
-			Data: []byte("-- +neo4go Up\nCREATE INDEX i3;\n\n-- +neo4go Down\nDROP INDEX i3;"),
+			Data: []byte("// +neo4go Up\nCREATE INDEX i3;\n\n// +neo4go Down\nDROP INDEX i3;"),
 			Mode: fs.FileMode(0644),
 		},
 		"001_first.cypher": &fstest.MapFile{
-			Data: []byte("-- +neo4go Up\nCREATE INDEX i1;\n\n-- +neo4go Down\nDROP INDEX i1;"),
+			Data: []byte("// +neo4go Up\nCREATE INDEX i1;\n\n// +neo4go Down\nDROP INDEX i1;"),
 			Mode: fs.FileMode(0644),
 		},
 		"002_second.cypher": &fstest.MapFile{
-			Data: []byte("-- +neo4go Up\nCREATE INDEX i2;\n\n-- +neo4go Down\nDROP INDEX i2;"),
+			Data: []byte("// +neo4go Up\nCREATE INDEX i2;\n\n// +neo4go Down\nDROP INDEX i2;"),
 			Mode: fs.FileMode(0644),
 		},
 	}
@@ -216,11 +216,11 @@ func TestParserMigrationOrdering(t *testing.T) {
 func TestParserInvalidFilenames(t *testing.T) {
 	filesystem := fstest.MapFS{
 		"invalid.cypher": &fstest.MapFile{
-			Data: []byte("-- +neo4go Up\nCREATE INDEX i1;\n\n-- +neo4go Down\nDROP INDEX i1;"),
+			Data: []byte("// +neo4go Up\nCREATE INDEX i1;\n\n// +neo4go Down\nDROP INDEX i1;"),
 			Mode: fs.FileMode(0644),
 		},
 		"001_valid.cypher": &fstest.MapFile{
-			Data: []byte("-- +neo4go Up\nCREATE INDEX i1;\n\n-- +neo4go Down\nDROP INDEX i1;"),
+			Data: []byte("// +neo4go Up\nCREATE INDEX i1;\n\n// +neo4go Down\nDROP INDEX i1;"),
 			Mode: fs.FileMode(0644),
 		},
 		"notamigration.txt": &fstest.MapFile{
