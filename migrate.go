@@ -40,6 +40,8 @@ func NewWithDriver(driver neo4j.DriverWithContext, cfg Config) (Migrator, error)
 	}
 
 	filesystem := cfg.MigrationsFS
+	isEmbedded := cfg.MigrationsFS != nil
+	actualMigrationsDir := cfg.MigrationsDir
 	if filesystem == nil {
 		filesystem = os.DirFS(cfg.MigrationsDir)
 	}
@@ -56,7 +58,7 @@ func NewWithDriver(driver neo4j.DriverWithContext, cfg Config) (Migrator, error)
 
 	storage := newNeo4jStorage(driver, database, logger)
 
-	m, err := newMigrator(driver, storage, filesystem, migrationsDir, database, logger)
+	m, err := newMigrator(driver, storage, filesystem, migrationsDir, database, logger, actualMigrationsDir, isEmbedded)
 	if err != nil {
 		return nil, err
 	}

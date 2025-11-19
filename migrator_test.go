@@ -593,7 +593,7 @@ func TestNewMigrator(t *testing.T) {
 			storage := newMockStorage()
 			logger := newMockLogger()
 
-			m, err := newMigrator(nil, storage, tt.filesystem, tt.dir, "neo4j", logger)
+			m, err := newMigrator(nil, storage, tt.filesystem, tt.dir, "neo4j", logger, "./migrations", false)
 
 			if tt.expectError {
 				if err == nil {

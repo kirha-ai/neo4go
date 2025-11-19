@@ -4,21 +4,26 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"os"
+	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
 
 type migrator struct {
-	driver     neo4j.DriverWithContext
-	storage    Storage
-	parser     *parser
-	migrations []Migration
-	database   string
-	logger     Logger
+	driver        neo4j.DriverWithContext
+	storage       Storage
+	parser        *parser
+	migrations    []Migration
+	database      string
+	logger        Logger
+	migrationsDir string
+	isEmbedded    bool
 }
 
-func newMigrator(driver neo4j.DriverWithContext, storage Storage, filesystem fs.FS, migrationsDir string, database string, logger Logger) (*migrator, error) {
+func newMigrator(driver neo4j.DriverWithContext, storage Storage, filesystem fs.FS, migrationsDir string, database string, logger Logger, actualMigrationsDir string, isEmbedded bool) (*migrator, error) {
 	p := newParser(filesystem)
 	migrations, err := p.parseMigrations(migrationsDir)
 	if err != nil {
@@ -26,12 +31,14 @@ func newMigrator(driver neo4j.DriverWithContext, storage Storage, filesystem fs.
 	}
 
 	return &migrator{
-		driver:     driver,
-		storage:    storage,
-		parser:     p,
-		migrations: migrations,
-		database:   database,
-		logger:     logger,
+		driver:        driver,
+		storage:       storage,
+		parser:        p,
+		migrations:    migrations,
+		database:      database,
+		logger:        logger,
+		migrationsDir: actualMigrationsDir,
+		isEmbedded:    isEmbedded,
 	}, nil
 }
 
@@ -255,6 +262,40 @@ func (m *migrator) Version(ctx context.Context) (int, error) {
 	return m.storage.GetCurrentVersion(ctx)
 }
 
+func (m *migrator) Create(ctx context.Context, name string) (Migration, error) {
+	if m.isEmbedded {
+		return Migration{}, ErrCannotCreateInEmbedded
+	}
+
+	if !m.isValidMigrationName(name) {
+		return Migration{}, ErrInvalidMigrationName
+	}
+
+	if err := m.ensureMigrationsDir(); err != nil {
+		return Migration{}, fmt.Errorf("failed to create migrations directory: %w", err)
+	}
+
+	version := m.generateVersion()
+	filename := m.generateFilename(version, name)
+	filePath := m.getFilePath(filename)
+
+	content := m.getMigrationTemplate()
+
+	if err := m.writeFile(filePath, content); err != nil {
+		return Migration{}, fmt.Errorf("failed to create migration file: %w", err)
+	}
+
+	m.logger.Info("created migration", "version", version, "name", name, "path", filePath)
+
+	// Parse the newly created file using the relative path
+	migration, err := m.parser.parseMigrationFile(filename, version, name)
+	if err != nil {
+		return Migration{}, fmt.Errorf("failed to parse created migration: %w", err)
+	}
+
+	return migration, nil
+}
+
 func (m *migrator) Close() error {
 	return m.storage.Close()
 }
@@ -294,4 +335,47 @@ func (m *migrator) executeMigration(ctx context.Context, sql string) error {
 
 func (m *migrator) splitStatements(sql string) []string {
 	return strings.Split(sql, ";")
+}
+
+func (m *migrator) isValidMigrationName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for _, r := range name {
+		if !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_') {
+			return false
+		}
+	}
+	return true
+}
+
+func (m *migrator) ensureMigrationsDir() error {
+	return os.MkdirAll(m.migrationsDir, 0750)
+}
+
+func (m *migrator) generateVersion() int {
+	return int(time.Now().Unix())
+}
+
+func (m *migrator) generateFilename(version int, name string) string {
+	return fmt.Sprintf("%d_%s.cypher", version, name)
+}
+
+func (m *migrator) getFilePath(filename string) string {
+	return filepath.Join(m.migrationsDir, filename)
+}
+
+func (m *migrator) getMigrationTemplate() string {
+	return `-- +neo4go Up
+-- Add your up migration statements here
+
+
+-- +neo4go Down
+-- Add your down migration statements here
+
+`
+}
+
+func (m *migrator) writeFile(path, content string) error {
+	return os.WriteFile(path, []byte(content), 0600)
 }
