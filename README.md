@@ -39,7 +39,7 @@ make install
 **Option 2: Install specific version**
 
 ```bash
-go install go.kirha.ai/neo4go/cmd/neo4go@v0.0.1
+go install go.kirha.ai/neo4go/cmd@v0.0.3
 ```
 
 **Option 3: Download pre-built binaries**
@@ -86,6 +86,12 @@ var migrationsFS embed.FS
 func main() {
     ctx := context.Background()
 
+	// Load configuration from environment variables
+    //cfg, err := neo4go.GetConfigFromEnv()
+    //if err != nil {
+    //    log.Fatal(err)
+    //}
+    
     migrator, err := neo4go.New(neo4go.Config{
         URI:          "bolt://localhost:7687",
         Username:     "neo4j",

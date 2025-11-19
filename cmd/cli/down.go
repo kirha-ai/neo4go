@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -7,13 +7,13 @@ import (
 	"go.kirha.ai/neo4go"
 )
 
-func newUpCmd() *cobra.Command {
+func NewDownCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "up",
-		Short: "Run all pending migrations",
+		Use:   "down",
+		Short: "Rollback the last migration",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := getConfigFromEnv()
+			cfg, err := neo4go.GetConfigFromEnv()
 			if err != nil {
 				return err
 			}
@@ -26,11 +26,11 @@ func newUpCmd() *cobra.Command {
 				_ = migrator.Close()
 			}()
 
-			if err := migrator.Up(cmd.Context()); err != nil {
-				return fmt.Errorf("failed to run migrations: %w", err)
+			if err := migrator.Down(cmd.Context()); err != nil {
+				return fmt.Errorf("failed to rollback migration: %w", err)
 			}
 
-			fmt.Println("All migrations applied successfully")
+			fmt.Println("Migration rolled back successfully")
 			return nil
 		},
 	}

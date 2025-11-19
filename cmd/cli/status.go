@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -7,13 +7,13 @@ import (
 	"go.kirha.ai/neo4go"
 )
 
-func newStatusCmd() *cobra.Command {
+func NewStatusCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "status",
 		Short: "Show migration status",
 		Args:  cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			cfg, err := getConfigFromEnv()
+			cfg, err := neo4go.GetConfigFromEnv()
 			if err != nil {
 				return err
 			}

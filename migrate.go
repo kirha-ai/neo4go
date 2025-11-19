@@ -3,21 +3,10 @@ package neo4go
 import (
 	"context"
 	"fmt"
-	"io/fs"
 	"os"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 )
-
-type Config struct {
-	URI           string
-	Username      string
-	Password      string
-	Database      string
-	MigrationsDir string
-	MigrationsFS  fs.FS
-	Logger        Logger
-}
 
 func New(cfg Config) (Migrator, error) {
 	if err := validateConfig(cfg); err != nil {
@@ -73,24 +62,4 @@ func NewWithDriver(driver neo4j.DriverWithContext, cfg Config) (Migrator, error)
 	}
 
 	return m, nil
-}
-
-func validateConfig(cfg Config) error {
-	if cfg.URI == "" {
-		return fmt.Errorf("%w: URI is required", ErrInvalidConfig)
-	}
-
-	if cfg.Username == "" {
-		return fmt.Errorf("%w: Username is required", ErrInvalidConfig)
-	}
-
-	if cfg.Password == "" {
-		return fmt.Errorf("%w: Password is required", ErrInvalidConfig)
-	}
-
-	if cfg.MigrationsDir == "" && cfg.MigrationsFS == nil {
-		return fmt.Errorf("%w: either MigrationsDir or MigrationsFS must be provided", ErrInvalidConfig)
-	}
-
-	return nil
 }

@@ -37,10 +37,10 @@ docker-down:
 	docker-compose down -v
 
 build:
-	go build -o bin/neo4go ./cmd/neo4go
+	go build -o bin/neo4go ./cmd
 
 install:
-	go install ./cmd/neo4go
+	go install ./cmd
 
 release:
 	goreleaser release --clean

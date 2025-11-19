@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"go.kirha.ai/neo4go"
 )
 
-func newDownToCmd() *cobra.Command {
+func NewDownToCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "down-to <version>",
 		Short: "Rollback down to a specific version",
@@ -19,7 +19,7 @@ func newDownToCmd() *cobra.Command {
 				return fmt.Errorf("invalid version number: %w", err)
 			}
 
-			cfg, err := getConfigFromEnv()
+			cfg, err := neo4go.GetConfigFromEnv()
 			if err != nil {
 				return err
 			}

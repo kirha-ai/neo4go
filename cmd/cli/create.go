@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func newCreateCmd() *cobra.Command {
+func NewCreateCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "create <name>",
 		Short: "Create a new migration file",
