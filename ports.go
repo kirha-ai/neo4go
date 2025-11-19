@@ -9,6 +9,7 @@ type Migrator interface {
 	DownTo(ctx context.Context, version int) error
 	Status(ctx context.Context) ([]MigrationStatus, error)
 	Version(ctx context.Context) (int, error)
+	Create(ctx context.Context, name string) (Migration, error)
 	Close() error
 }
 
