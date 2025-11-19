@@ -62,7 +62,7 @@ func (p *parser) parseMigrations(dir string) ([]Migration, error) {
 	}
 
 	if len(migrations) == 0 {
-		return nil, ErrNoMigrations
+		return []Migration{}, nil
 	}
 
 	sort.Slice(migrations, func(i, j int) bool {
