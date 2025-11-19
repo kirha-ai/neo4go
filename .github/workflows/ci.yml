@@ -116,4 +116,4 @@ jobs:
         go-version: '1.23'
 
     - name: Build CLI
-      run: go build -v ./cmd
+      run: go build -v -o neo4go ./cmd
