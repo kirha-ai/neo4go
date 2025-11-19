@@ -6,7 +6,7 @@ before:
     - go test ./...
 
 builds:
-  - main: ./cmd/neo4go
+  - main: ./cmd
     binary: neo4go
     goos:
       - linux

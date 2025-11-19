@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -8,7 +8,7 @@ import (
 	"go.kirha.ai/neo4go"
 )
 
-func newUpToCmd() *cobra.Command {
+func NewUpToCmd() *cobra.Command {
 	return &cobra.Command{
 		Use:   "up-to <version>",
 		Short: "Migrate up to a specific version",
@@ -19,7 +19,7 @@ func newUpToCmd() *cobra.Command {
 				return fmt.Errorf("invalid version number: %w", err)
 			}
 
-			cfg, err := getConfigFromEnv()
+			cfg, err := neo4go.GetConfigFromEnv()
 			if err != nil {
 				return err
 			}
