@@ -47,11 +47,11 @@ neo4go down
 Migration files follow this format:
 
 ```cypher
--- +neo4go Up
+// +neo4go Up
 CREATE CONSTRAINT user_id_unique IF NOT EXISTS
 FOR (u:User) REQUIRE u.id IS UNIQUE;
 
--- +neo4go Down
+// +neo4go Down
 DROP CONSTRAINT user_id_unique IF EXISTS;
 ```
 

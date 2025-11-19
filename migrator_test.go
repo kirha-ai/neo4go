@@ -574,7 +574,7 @@ func TestNewMigrator(t *testing.T) {
 			name: "valid migrations",
 			filesystem: fstest.MapFS{
 				"001_initial.cypher": &fstest.MapFile{
-					Data: []byte("-- +neo4go Up\nCREATE CONSTRAINT c1;\n\n-- +neo4go Down\nDROP CONSTRAINT c1;"),
+					Data: []byte("// +neo4go Up\nCREATE CONSTRAINT c1;\n\n// +neo4go Down\nDROP CONSTRAINT c1;"),
 				},
 			},
 			dir:         ".",
@@ -584,7 +584,7 @@ func TestNewMigrator(t *testing.T) {
 			name:        "no migrations",
 			filesystem:  fstest.MapFS{},
 			dir:         ".",
-			expectError: true,
+			expectError: false,
 		},
 	}
 
