@@ -39,7 +39,7 @@ make install
 **Option 2: Install specific version**
 
 ```bash
-go install go.kirha.ai/neo4go/cmd@v0.0.3
+go install go.kirha.ai/neo4go/cmd@v0.1.0
 ```
 
 **Option 3: Download pre-built binaries**
